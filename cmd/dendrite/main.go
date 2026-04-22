@@ -203,10 +203,20 @@ func executeLock(cfg *config.Config, lockPath string, platforms []platform.Platf
 
 			fmt.Fprintf(os.Stderr, "locking %s for %s...\n", name, platformStr)
 
-			candidates := platform.Resolve(tool.Asset, tool.Version, p)
+			var candidates []string
+			if tool.URL != "" {
+				// Direct URL mode: expand placeholders in the URL template.
+				candidates = platform.ResolveWithPrefix(tool.URL, tool.Version, tool.VersionPrefix, p)
+			} else {
+				// GitHub Releases mode: resolve asset name, then build full URL.
+				assetCandidates := platform.ResolveWithPrefix(tool.Asset, tool.Version, tool.VersionPrefix, p)
+				for _, assetName := range assetCandidates {
+					candidates = append(candidates, buildGitHubReleaseURL(tool.Owner, tool.Repo, tool.Version, assetName))
+				}
+			}
+
 			var locked bool
-			for _, assetName := range candidates {
-				url := buildGitHubReleaseURL(tool.Owner, tool.Repo, tool.Version, assetName)
+			for _, url := range candidates {
 				sha256, prefetchErr := lock.PrefetchURL(url)
 				if prefetchErr != nil {
 					continue

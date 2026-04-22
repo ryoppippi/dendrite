@@ -22,11 +22,12 @@ func TestGenerate(t *testing.T) {
 			name: "basic tool with v prefix",
 			input: GenerateInput{
 				Tool: config.Tool{
-					Owner:   "cli",
-					Repo:    "cli",
-					Version: "v2.87.0",
-					Asset:   "gh_{version}_{os}_{arch}.tar.gz",
-					Bins:    []string{"gh"},
+					Owner:         "cli",
+					Repo:          "cli",
+					Version:       "v2.87.0",
+					Asset:         "gh_{version}_{os}_{arch}.tar.gz",
+					Bins:          []string{"gh"},
+					VersionPrefix: "v",
 				},
 				Lock: LockEntry{
 					URL:    "https://github.com/cli/cli/releases/download/v2.87.0/gh_2.87.0_macOS_arm64.tar.gz",
@@ -60,11 +61,12 @@ stdenv.mkDerivation rec {
 			name: "version without v prefix",
 			input: GenerateInput{
 				Tool: config.Tool{
-					Owner:   "BurntSushi",
-					Repo:    "ripgrep",
-					Version: "14.1.0",
-					Asset:   "ripgrep-{version}-{arch}-{os}.tar.gz",
-					Bins:    []string{"rg"},
+					Owner:         "BurntSushi",
+					Repo:          "ripgrep",
+					Version:       "14.1.0",
+					Asset:         "ripgrep-{version}-{arch}-{os}.tar.gz",
+					Bins:          []string{"rg"},
+					VersionPrefix: "v",
 				},
 				Lock: LockEntry{
 					URL:    "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-arm64-linux.tar.gz",
@@ -98,11 +100,12 @@ stdenv.mkDerivation rec {
 			name: "bins defaults to repo name",
 			input: GenerateInput{
 				Tool: config.Tool{
-					Owner:   "aquaproj",
-					Repo:    "aqua",
-					Version: "v2.39.0",
-					Asset:   "aqua_{os}_{arch}.tar.gz",
-					Bins:    []string{"aqua"},
+					Owner:         "aquaproj",
+					Repo:          "aqua",
+					Version:       "v2.39.0",
+					Asset:         "aqua_{os}_{arch}.tar.gz",
+					Bins:          []string{"aqua"},
+					VersionPrefix: "v",
 				},
 				Lock: LockEntry{
 					URL:    "https://github.com/aquaproj/aqua/releases/download/v2.39.0/aqua_darwin_arm64.tar.gz",
@@ -136,11 +139,12 @@ stdenv.mkDerivation rec {
 			name: "bins falls back to repo when empty",
 			input: GenerateInput{
 				Tool: config.Tool{
-					Owner:   "hashicorp",
-					Repo:    "terraform",
-					Version: "v1.9.0",
-					Asset:   "terraform_{version}_{os}_{arch}.zip",
-					Bins:    nil,
+					Owner:         "hashicorp",
+					Repo:          "terraform",
+					Version:       "v1.9.0",
+					Asset:         "terraform_{version}_{os}_{arch}.zip",
+					Bins:          nil,
+					VersionPrefix: "v",
 				},
 				Lock: LockEntry{
 					URL:    "https://github.com/hashicorp/terraform/releases/download/v1.9.0/terraform_1.9.0_darwin_arm64.zip",
@@ -177,11 +181,12 @@ stdenv.mkDerivation rec {
 			name: "sha256 with base64 encoding",
 			input: GenerateInput{
 				Tool: config.Tool{
-					Owner:   "junegunn",
-					Repo:    "fzf",
-					Version: "v0.55.0",
-					Asset:   "fzf-{version}-{os}_{arch}.tar.gz",
-					Bins:    []string{"fzf"},
+					Owner:         "junegunn",
+					Repo:          "fzf",
+					Version:       "v0.55.0",
+					Asset:         "fzf-{version}-{os}_{arch}.tar.gz",
+					Bins:          []string{"fzf"},
+					VersionPrefix: "v",
 				},
 				Lock: LockEntry{
 					URL:    "https://github.com/junegunn/fzf/releases/download/v0.55.0/fzf-0.55.0-darwin_arm64.tar.gz",
@@ -215,11 +220,12 @@ stdenv.mkDerivation rec {
 			name: "multiple bins",
 			input: GenerateInput{
 				Tool: config.Tool{
-					Owner:   "cli",
-					Repo:    "cli",
-					Version: "v2.87.0",
-					Asset:   "gh_{version}_{os}_{arch}.tar.gz",
-					Bins:    []string{"gh", "gh-auth", "gh-repo"},
+					Owner:         "cli",
+					Repo:          "cli",
+					Version:       "v2.87.0",
+					Asset:         "gh_{version}_{os}_{arch}.tar.gz",
+					Bins:          []string{"gh", "gh-auth", "gh-repo"},
+					VersionPrefix: "v",
 				},
 				Lock: LockEntry{
 					URL:    "https://github.com/cli/cli/releases/download/v2.87.0/gh_2.87.0_macOS_arm64.tar.gz",
@@ -255,11 +261,12 @@ stdenv.mkDerivation rec {
 			name: "zip asset uses unzip instead of tar",
 			input: GenerateInput{
 				Tool: config.Tool{
-					Owner:   "hashicorp",
-					Repo:    "packer",
-					Version: "v1.11.0",
-					Asset:   "packer_{version}_{os}_{arch}.zip",
-					Bins:    []string{"packer"},
+					Owner:         "hashicorp",
+					Repo:          "packer",
+					Version:       "v1.11.0",
+					Asset:         "packer_{version}_{os}_{arch}.zip",
+					Bins:          []string{"packer"},
+					VersionPrefix: "v",
 				},
 				Lock: LockEntry{
 					URL:    "https://releases.hashicorp.com/packer/1.11.0/packer_1.11.0_darwin_arm64.zip",
@@ -288,6 +295,85 @@ stdenv.mkDerivation rec {
     mkdir -p $out/bin
     unzip -o $src -d $out/bin
     chmod +x $out/bin/packer
+  '';
+}
+`,
+		},
+		{
+			name: "version_prefix go strips go prefix",
+			input: GenerateInput{
+				Tool: config.Tool{
+					Owner:         "golang",
+					Repo:          "go",
+					Version:       "go1.26.0",
+					Asset:         "go{version}.darwin-arm64.tar.gz",
+					Bins:          []string{"go", "gofmt"},
+					VersionPrefix: "go",
+				},
+				Lock: LockEntry{
+					URL:    "https://go.dev/dl/go1.26.0.darwin-arm64.tar.gz",
+					SHA256: "sha256-GOLANG",
+				},
+			},
+			want: `{
+  stdenv,
+  fetchurl,
+}:
+stdenv.mkDerivation rec {
+  pname = "go";
+  version = "1.26.0";
+
+  src = fetchurl {
+    url = "https://go.dev/dl/go1.26.0.darwin-arm64.tar.gz";
+    sha256 = "sha256-GOLANG";
+  };
+
+  dontUnpack = true;
+
+  installPhase = ''
+    mkdir -p $out/bin
+    tar -xzf $src -C $out/bin
+    chmod +x $out/bin/go
+    chmod +x $out/bin/gofmt
+  '';
+}
+`,
+		},
+		{
+			name: "version_prefix empty keeps version as-is",
+			input: GenerateInput{
+				Tool: config.Tool{
+					Owner:         "BurntSushi",
+					Repo:          "ripgrep",
+					Version:       "14.1.0",
+					Asset:         "ripgrep-{version}-{arch}-{os}.tar.gz",
+					Bins:          []string{"rg"},
+					VersionPrefix: "",
+				},
+				Lock: LockEntry{
+					URL:    "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-arm64-linux.tar.gz",
+					SHA256: "sha256-NOPREFIX",
+				},
+			},
+			want: `{
+  stdenv,
+  fetchurl,
+}:
+stdenv.mkDerivation rec {
+  pname = "ripgrep";
+  version = "14.1.0";
+
+  src = fetchurl {
+    url = "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-arm64-linux.tar.gz";
+    sha256 = "sha256-NOPREFIX";
+  };
+
+  dontUnpack = true;
+
+  installPhase = ''
+    mkdir -p $out/bin
+    tar -xzf $src -C $out/bin
+    chmod +x $out/bin/rg
   '';
 }
 `,
@@ -335,11 +421,12 @@ func TestGenerate_versionStripping(t *testing.T) {
 
 			input := GenerateInput{
 				Tool: config.Tool{
-					Owner:   "owner",
-					Repo:    "repo",
-					Version: tt.version,
-					Asset:   "tool.tar.gz",
-					Bins:    []string{"tool"},
+					Owner:         "owner",
+					Repo:          "repo",
+					Version:       tt.version,
+					Asset:         "tool.tar.gz",
+					Bins:          []string{"tool"},
+					VersionPrefix: "v",
 				},
 				Lock: LockEntry{
 					URL:    "https://example.com/tool.tar.gz",
@@ -365,11 +452,12 @@ func TestGenerate_outputStructure(t *testing.T) {
 
 	input := GenerateInput{
 		Tool: config.Tool{
-			Owner:   "cli",
-			Repo:    "cli",
-			Version: "v2.87.0",
-			Asset:   "gh_{version}_{os}_{arch}.tar.gz",
-			Bins:    []string{"gh"},
+			Owner:         "cli",
+			Repo:          "cli",
+			Version:       "v2.87.0",
+			Asset:         "gh_{version}_{os}_{arch}.tar.gz",
+			Bins:          []string{"gh"},
+			VersionPrefix: "v",
 		},
 		Lock: LockEntry{
 			URL:    "https://github.com/cli/cli/releases/download/v2.87.0/gh_2.87.0_macOS_arm64.tar.gz",
@@ -424,11 +512,12 @@ func TestGenerateAll(t *testing.T) {
 	inputs := []GenerateInput{
 		{
 			Tool: config.Tool{
-				Owner:   "cli",
-				Repo:    "cli",
-				Version: "v2.87.0",
-				Asset:   "gh_{version}_{os}_{arch}.tar.gz",
-				Bins:    []string{"gh"},
+				Owner:         "cli",
+				Repo:          "cli",
+				Version:       "v2.87.0",
+				Asset:         "gh_{version}_{os}_{arch}.tar.gz",
+				Bins:          []string{"gh"},
+				VersionPrefix: "v",
 			},
 			Lock: LockEntry{
 				URL:    "https://github.com/cli/cli/releases/download/v2.87.0/gh_2.87.0_macOS_arm64.tar.gz",
@@ -437,11 +526,12 @@ func TestGenerateAll(t *testing.T) {
 		},
 		{
 			Tool: config.Tool{
-				Owner:   "BurntSushi",
-				Repo:    "ripgrep",
-				Version: "14.1.0",
-				Asset:   "ripgrep-{version}-{arch}-{os}.tar.gz",
-				Bins:    []string{"rg"},
+				Owner:         "BurntSushi",
+				Repo:          "ripgrep",
+				Version:       "14.1.0",
+				Asset:         "ripgrep-{version}-{arch}-{os}.tar.gz",
+				Bins:          []string{"rg"},
+				VersionPrefix: "v",
 			},
 			Lock: LockEntry{
 				URL:    "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-arm64-linux.tar.gz",
@@ -450,11 +540,12 @@ func TestGenerateAll(t *testing.T) {
 		},
 		{
 			Tool: config.Tool{
-				Owner:   "aquaproj",
-				Repo:    "aqua",
-				Version: "v2.39.0",
-				Asset:   "aqua_{os}_{arch}.tar.gz",
-				Bins:    []string{"aqua"},
+				Owner:         "aquaproj",
+				Repo:          "aqua",
+				Version:       "v2.39.0",
+				Asset:         "aqua_{os}_{arch}.tar.gz",
+				Bins:          []string{"aqua"},
+				VersionPrefix: "v",
 			},
 			Lock: LockEntry{
 				URL:    "https://github.com/aquaproj/aqua/releases/download/v2.39.0/aqua_darwin_arm64.tar.gz",
@@ -541,11 +632,12 @@ func TestGenerateAll_invalidOutDir(t *testing.T) {
 	inputs := []GenerateInput{
 		{
 			Tool: config.Tool{
-				Owner:   "cli",
-				Repo:    "cli",
-				Version: "v1.0.0",
-				Asset:   "tool.tar.gz",
-				Bins:    []string{"gh"},
+				Owner:         "cli",
+				Repo:          "cli",
+				Version:       "v1.0.0",
+				Asset:         "tool.tar.gz",
+				Bins:          []string{"gh"},
+				VersionPrefix: "v",
 			},
 			Lock: LockEntry{
 				URL:    "https://example.com/tool.tar.gz",
@@ -574,11 +666,12 @@ func TestGenerateAll_contentMatchesGenerate(t *testing.T) {
 
 	input := GenerateInput{
 		Tool: config.Tool{
-			Owner:   "cli",
-			Repo:    "cli",
-			Version: "v2.87.0",
-			Asset:   "gh_{version}_{os}_{arch}.tar.gz",
-			Bins:    []string{"gh"},
+			Owner:         "cli",
+			Repo:          "cli",
+			Version:       "v2.87.0",
+			Asset:         "gh_{version}_{os}_{arch}.tar.gz",
+			Bins:          []string{"gh"},
+			VersionPrefix: "v",
 		},
 		Lock: LockEntry{
 			URL:    "https://github.com/cli/cli/releases/download/v2.87.0/gh_2.87.0_macOS_arm64.tar.gz",
@@ -615,11 +708,12 @@ func TestGenerateAll_binsFallbackToRepo(t *testing.T) {
 
 	input := GenerateInput{
 		Tool: config.Tool{
-			Owner:   "hashicorp",
-			Repo:    "terraform",
-			Version: "v1.9.0",
-			Asset:   "terraform_{version}_{os}_{arch}.zip",
-			Bins:    nil,
+			Owner:         "hashicorp",
+			Repo:          "terraform",
+			Version:       "v1.9.0",
+			Asset:         "terraform_{version}_{os}_{arch}.zip",
+			Bins:          nil,
+			VersionPrefix: "v",
 		},
 		Lock: LockEntry{
 			URL:    "https://example.com/terraform.zip",

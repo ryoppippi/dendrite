@@ -57,20 +57,47 @@ dendrite generate -f dendrite.yaml -o packages/ --lock
 ```yaml
 tools:
   - name: <owner>/<repo>@<version>   # required
-    asset: <pattern>                   # required
+    asset: <pattern>                   # required (mutually exclusive with url)
+    url: <url_pattern>                 # for non-GitHub sources (mutually exclusive with asset)
     bins:                              # optional (defaults to [repo name])
       - <binary_name>
+    version_prefix: "v"                # optional (default: "v", set to "go" for golang/go, "" for no prefix)
 ```
 
 ### Placeholders
 
 | Placeholder | Description |
 |-------------|-------------|
-| `{version}` | Version with `v` prefix stripped |
+| `{version}` | Version with prefix stripped (configurable via `version_prefix`) |
 | `{os}` | OS name (`darwin`, `macOS`, `linux`, `Linux`) |
 | `{arch}` | Architecture (`arm64`, `aarch64`, `amd64`, `x86_64`) |
 
 The tool tries multiple OS/arch name combinations and uses the first URL that succeeds.
+
+### Non-GitHub sources
+
+Use `url` instead of `asset` for tools hosted outside GitHub Releases:
+
+```yaml
+tools:
+  - name: google/cloud-sdk@v529.0.0
+    url: https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-{version}-darwin-arm.tar.gz
+    bins:
+      - gcloud
+```
+
+### Custom version prefix
+
+Some tools use non-standard version prefixes:
+
+```yaml
+tools:
+  - name: golang/go@go1.26.0
+    asset: go{version}.{os}-{arch}.tar.gz
+    version_prefix: "go"
+    bins:
+      - go
+```
 
 ### Multiple binaries
 

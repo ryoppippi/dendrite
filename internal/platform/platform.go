@@ -79,9 +79,14 @@ func DefaultMapping(p Platform) Mapping {
 //	 "gh_2.87.0_macOS_arm64.tar.gz",
 //	 "gh_2.87.0_macOS_aarch64.tar.gz"]
 func Resolve(asset string, version string, p Platform) []string {
+	return ResolveWithPrefix(asset, version, "v", p)
+}
+
+// ResolveWithPrefix is like Resolve but strips the given prefix from version.
+func ResolveWithPrefix(asset string, version string, prefix string, p Platform) []string {
 	m := DefaultMapping(p)
 
-	ver := strings.TrimPrefix(version, "v")
+	ver := strings.TrimPrefix(version, prefix)
 	base := strings.ReplaceAll(asset, "{version}", ver)
 
 	seen := make(map[string]struct{})

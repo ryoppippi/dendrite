@@ -183,7 +183,7 @@ tools:
   - name: cli/cli@v2.87.0
 `,
 			wantErr:   true,
-			errSubstr: "asset is required",
+			errSubstr: "asset or url is required",
 		},
 		{
 			name: "asset is whitespace only",
@@ -193,7 +193,7 @@ tools:
     asset: "   "
 `,
 			wantErr:   true,
-			errSubstr: "asset is required",
+			errSubstr: "asset or url is required",
 		},
 		{
 			name: "multiple validation errors in one tool",
@@ -237,6 +237,74 @@ tools:
 				assertEqual(t, "Repo", "terraform", tool.Repo)
 				assertEqual(t, "Version", "v1.9.0", tool.Version)
 				assertSliceEqual(t, "Bins", []string{"terraform"}, tool.Bins)
+			},
+		},
+		{
+			name: "url instead of asset",
+			input: `
+tools:
+  - name: golang/go@go1.26.0
+    url: https://go.dev/dl/go{version}.darwin-arm64.tar.gz
+    version_prefix: "go"
+    bins:
+      - go
+      - gofmt
+`,
+			check: func(t *testing.T, cfg *Config) {
+				t.Helper()
+				tool := cfg.Tools[0]
+				assertEqual(t, "Owner", "golang", tool.Owner)
+				assertEqual(t, "Repo", "go", tool.Repo)
+				assertEqual(t, "Version", "go1.26.0", tool.Version)
+				assertEqual(t, "URL", "https://go.dev/dl/go{version}.darwin-arm64.tar.gz", tool.URL)
+				assertEqual(t, "Asset", "", tool.Asset)
+				assertEqual(t, "VersionPrefix", "go", tool.VersionPrefix)
+				assertSliceEqual(t, "Bins", []string{"go", "gofmt"}, tool.Bins)
+			},
+		},
+		{
+			name: "asset and url mutually exclusive",
+			input: `
+tools:
+  - name: cli/cli@v2.87.0
+    asset: gh_{version}_{os}_{arch}.tar.gz
+    url: https://example.com/gh.tar.gz
+`,
+			wantErr:   true,
+			errSubstr: "asset and url are mutually exclusive",
+		},
+		{
+			name: "version_prefix go for golang style",
+			input: `
+tools:
+  - name: golang/go@go1.26.0
+    asset: go{version}.darwin-arm64.tar.gz
+    version_prefix: "go"
+    bins:
+      - go
+`,
+			check: func(t *testing.T, cfg *Config) {
+				t.Helper()
+				tool := cfg.Tools[0]
+				assertEqual(t, "VersionPrefix", "go", tool.VersionPrefix)
+				assertEqual(t, "Version", "go1.26.0", tool.Version)
+			},
+		},
+		{
+			name: "version_prefix empty string for no stripping",
+			input: `
+tools:
+  - name: BurntSushi/ripgrep@14.1.0
+    asset: ripgrep-{version}-{arch}-{os}.tar.gz
+    version_prefix: ""
+    bins:
+      - rg
+`,
+			check: func(t *testing.T, cfg *Config) {
+				t.Helper()
+				tool := cfg.Tools[0]
+				assertEqual(t, "VersionPrefix", "", tool.VersionPrefix)
+				assertEqual(t, "Version", "14.1.0", tool.Version)
 			},
 		},
 	}

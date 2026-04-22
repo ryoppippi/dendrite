@@ -69,9 +69,9 @@ type templateData struct {
 }
 
 // Generate renders a default.nix file for the given input.
-// The version has its leading "v" prefix stripped in the output.
+// The version has its prefix stripped in the output based on VersionPrefix.
 func Generate(input GenerateInput) ([]byte, error) {
-	version := strings.TrimPrefix(input.Tool.Version, "v")
+	version := strings.TrimPrefix(input.Tool.Version, input.Tool.VersionPrefix)
 
 	bins := input.Tool.Bins
 	if len(bins) == 0 {

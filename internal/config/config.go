@@ -28,19 +28,30 @@ type Tool struct {
 	// Version is the version string including any prefix (e.g. "v2.87.0").
 	Version string `yaml:"-"`
 	// Asset is the asset filename pattern with placeholders like {version}, {os}, {arch}.
+	// Mutually exclusive with URL.
 	Asset string `yaml:"asset"`
+	// URL is a direct download URL pattern with placeholders.
+	// Use this for non-GitHub sources. Mutually exclusive with Asset.
+	URL string `yaml:"url"`
 	// Bins is the list of binary names. Defaults to [repo name] if not specified.
 	Bins []string `yaml:"bins"`
+	// VersionPrefix is the prefix to strip from version when expanding {version}.
+	// Defaults to "v". Set to "" to keep version as-is, or "go" for golang/go, etc.
+	VersionPrefix string `yaml:"version_prefix"`
 
 	// name is the raw "owner/repo@version" string from the YAML.
 	name string
+	// versionPrefixSet tracks whether the user explicitly set version_prefix.
+	versionPrefixSet bool
 }
 
 // rawTool is used for YAML unmarshalling before validation.
 type rawTool struct {
-	Name  string   `yaml:"name"`
-	Asset string   `yaml:"asset"`
-	Bins  []string `yaml:"bins"`
+	Name          string   `yaml:"name"`
+	Asset         string   `yaml:"asset"`
+	URL           string   `yaml:"url"`
+	Bins          []string `yaml:"bins"`
+	VersionPrefix *string  `yaml:"version_prefix"`
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface for Tool.
@@ -51,7 +62,12 @@ func (t *Tool) UnmarshalYAML(value *yaml.Node) error {
 	}
 	t.name = raw.Name
 	t.Asset = raw.Asset
+	t.URL = raw.URL
 	t.Bins = raw.Bins
+	if raw.VersionPrefix != nil {
+		t.VersionPrefix = *raw.VersionPrefix
+		t.versionPrefixSet = true
+	}
 	return nil
 }
 
@@ -108,8 +124,18 @@ func validateTool(t *Tool, index int) error {
 		}
 	}
 
-	if strings.TrimSpace(t.Asset) == "" {
-		errs = append(errs, fmt.Errorf("tools[%d]: asset is required", index))
+	hasAsset := strings.TrimSpace(t.Asset) != ""
+	hasURL := strings.TrimSpace(t.URL) != ""
+	if !hasAsset && !hasURL {
+		errs = append(errs, fmt.Errorf("tools[%d]: asset or url is required", index))
+	}
+	if hasAsset && hasURL {
+		errs = append(errs, fmt.Errorf("tools[%d]: asset and url are mutually exclusive", index))
+	}
+
+	// Default version_prefix to "v" if not explicitly set.
+	if !t.versionPrefixSet {
+		t.VersionPrefix = "v"
 	}
 
 	// Default bins to [repo name] if not specified.
