@@ -1,0 +1,13 @@
+tools:
+  - name: aquaproj/aqua@v2.39.0
+    asset: aqua_{os}_{arch}.tar.gz
+
+  - name: cli/cli@v2.87.0
+    asset: gh_{version}_{os}_{arch}.zip
+    bins:
+      - gh
+
+  - name: BurntSushi/ripgrep@14.1.0
+    asset: ripgrep-{version}-{arch}-{os}.tar.gz
+    bins:
+      - rg
