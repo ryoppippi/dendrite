@@ -38,6 +38,10 @@ type Tool struct {
 	// VersionPrefix is the prefix to strip from version when expanding {version}.
 	// Defaults to "v". Set to "" to keep version as-is, or "go" for golang/go, etc.
 	VersionPrefix string `yaml:"version_prefix"`
+	// OSMap maps GOOS values to the tool's OS naming. e.g., {"darwin": "Darwin"}
+	OSMap map[string]string `yaml:"os_map"`
+	// ArchMap maps GOARCH values to the tool's arch naming. e.g., {"amd64": "x86_64"}
+	ArchMap map[string]string `yaml:"arch_map"`
 
 	// name is the raw "owner/repo@version" string from the YAML.
 	name string
@@ -47,11 +51,13 @@ type Tool struct {
 
 // rawTool is used for YAML unmarshalling before validation.
 type rawTool struct {
-	Name          string   `yaml:"name"`
-	Asset         string   `yaml:"asset"`
-	URL           string   `yaml:"url"`
-	Bins          []string `yaml:"bins"`
-	VersionPrefix *string  `yaml:"version_prefix"`
+	Name          string            `yaml:"name"`
+	Asset         string            `yaml:"asset"`
+	URL           string            `yaml:"url"`
+	Bins          []string          `yaml:"bins"`
+	VersionPrefix *string           `yaml:"version_prefix"`
+	OSMap         map[string]string `yaml:"os_map"`
+	ArchMap       map[string]string `yaml:"arch_map"`
 }
 
 // UnmarshalYAML implements the yaml.Unmarshaler interface for Tool.
@@ -65,6 +71,8 @@ func (t *Tool) UnmarshalYAML(value *yaml.Node) error {
 	t.Asset = raw.Asset
 	t.URL = raw.URL
 	t.Bins = raw.Bins
+	t.OSMap = raw.OSMap
+	t.ArchMap = raw.ArchMap
 
 	if raw.VersionPrefix != nil {
 		t.VersionPrefix = *raw.VersionPrefix

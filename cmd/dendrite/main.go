@@ -267,20 +267,13 @@ func executeLock(cfg *config.Config, lockPath string, platforms []platform.Platf
 	return nil
 }
 
-// resolveCandidates returns the list of candidate URLs for a tool on a given platform.
+// resolveCandidates returns the candidate URL for a tool on a given platform.
 func resolveCandidates(tool *config.Tool, p platform.Platform) []string {
 	if tool.URL != "" {
-		// Direct URL mode: expand placeholders in the URL template.
-		return platform.ResolveWithPrefix(tool.URL, tool.Version, tool.VersionPrefix, p)
+		return []string{platform.Resolve(tool.URL, tool.Version, tool.VersionPrefix, p, tool.OSMap, tool.ArchMap)}
 	}
 
-	// GitHub Releases mode: resolve asset name, then build full URL.
-	assetCandidates := platform.ResolveWithPrefix(tool.Asset, tool.Version, tool.VersionPrefix, p)
-	candidates := make([]string, 0, len(assetCandidates))
+	assetName := platform.Resolve(tool.Asset, tool.Version, tool.VersionPrefix, p, tool.OSMap, tool.ArchMap)
 
-	for _, assetName := range assetCandidates {
-		candidates = append(candidates, buildGitHubReleaseURL(tool.Owner, tool.Repo, tool.Version, assetName))
-	}
-
-	return candidates
+	return []string{buildGitHubReleaseURL(tool.Owner, tool.Repo, tool.Version, assetName)}
 }

@@ -307,6 +307,48 @@ tools:
 				assertEqual(t, "Version", "14.1.0", tool.Version)
 			},
 		},
+		{
+			name: "os_map and arch_map",
+			input: `
+tools:
+  - name: masaushi/accessory@v0.4.0
+    asset: accessory_{os}_{arch}.tar.gz
+    os_map:
+      darwin: Darwin
+    arch_map:
+      amd64: x86_64
+`,
+			check: func(t *testing.T, cfg *Config) {
+				t.Helper()
+				tool := cfg.Tools[0]
+				if len(tool.OSMap) != 1 {
+					t.Fatalf("expected 1 os_map entry, got %d", len(tool.OSMap))
+				}
+				assertEqual(t, "OSMap[darwin]", "Darwin", tool.OSMap["darwin"])
+				if len(tool.ArchMap) != 1 {
+					t.Fatalf("expected 1 arch_map entry, got %d", len(tool.ArchMap))
+				}
+				assertEqual(t, "ArchMap[amd64]", "x86_64", tool.ArchMap["amd64"])
+			},
+		},
+		{
+			name: "no os_map or arch_map defaults to nil",
+			input: `
+tools:
+  - name: cli/cli@v2.87.0
+    asset: gh_{version}_{os}_{arch}.tar.gz
+`,
+			check: func(t *testing.T, cfg *Config) {
+				t.Helper()
+				tool := cfg.Tools[0]
+				if tool.OSMap != nil {
+					t.Errorf("expected OSMap to be nil, got %v", tool.OSMap)
+				}
+				if tool.ArchMap != nil {
+					t.Errorf("expected ArchMap to be nil, got %v", tool.ArchMap)
+				}
+			},
+		},
 	}
 
 	for _, tt := range tests {

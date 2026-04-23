@@ -1,5 +1,5 @@
-// Package platform provides OS/architecture mapping for resolving asset
-// pattern placeholders into concrete download URLs.
+// Package platform provides OS/architecture resolution for expanding asset
+// pattern placeholders into a concrete download URL.
 package platform
 
 import "strings"
@@ -18,94 +18,40 @@ var (
 	LinuxAMD64  = Platform{OS: "linux", Arch: "amd64"}
 )
 
-// Mapping holds the set of placeholder replacement values for a given
-// OS or architecture. For example, the "darwin" OS maps to the names
-// ["darwin", "macOS"], meaning {os} can be replaced with either value.
-type Mapping struct {
-	OSNames   []string
-	ArchNames []string
-}
-
-// defaultMappings contains the built-in OS/arch placeholder values.
-// The outer key is "<os>/<arch>" (e.g. "darwin/arm64").
-var defaultMappings = map[string]Mapping{
-	"darwin/arm64": {
-		OSNames:   []string{"darwin", "macOS"},
-		ArchNames: []string{"arm64", "aarch64"},
-	},
-	"darwin/amd64": {
-		OSNames:   []string{"darwin", "macOS"},
-		ArchNames: []string{"amd64", "x86_64"},
-	},
-	"linux/arm64": {
-		OSNames:   []string{"linux", "Linux"},
-		ArchNames: []string{"arm64", "aarch64"},
-	},
-	"linux/amd64": {
-		OSNames:   []string{"linux", "Linux"},
-		ArchNames: []string{"amd64", "x86_64"},
-	},
-}
-
-// DefaultMapping returns the default Mapping for the given platform.
-// If the platform is not found in the built-in table, it returns a
-// Mapping that uses the raw OS and Arch values as single-element lists.
-func DefaultMapping(p Platform) Mapping {
-	key := p.OS + "/" + p.Arch
-
-	if m, ok := defaultMappings[key]; ok {
-		return m
-	}
-
-	return Mapping{
-		OSNames:   []string{p.OS},
-		ArchNames: []string{p.Arch},
-	}
-}
-
-// Resolve expands an asset pattern into all possible concrete asset names
-// by substituting {version}, {os}, and {arch} placeholders with the
-// appropriate values for the given platform.
-//
-// The version string has a leading "v" stripped before substitution.
-// For example, given:
-//
-//	asset    = "gh_{version}_{os}_{arch}.tar.gz"
-//	version  = "v2.87.0"
-//	platform = DarwinARM64
-//
-// Resolve returns:
-//
-//	["gh_2.87.0_darwin_arm64.tar.gz",
-//	 "gh_2.87.0_darwin_aarch64.tar.gz",
-//	 "gh_2.87.0_macOS_arm64.tar.gz",
-//	 "gh_2.87.0_macOS_aarch64.tar.gz"]
-func Resolve(asset, version string, p Platform) []string {
-	return ResolveWithPrefix(asset, version, "v", p)
-}
-
-// ResolveWithPrefix is like Resolve but strips the given prefix from version.
-func ResolveWithPrefix(asset, version, prefix string, p Platform) []string {
-	m := DefaultMapping(p)
-
-	ver := strings.TrimPrefix(version, prefix)
-	base := strings.ReplaceAll(asset, "{version}", ver)
-
-	seen := make(map[string]struct{})
-	results := make([]string, 0, len(m.OSNames)*len(m.ArchNames))
-
-	for _, osName := range m.OSNames {
-		for _, archName := range m.ArchNames {
-			r := strings.ReplaceAll(base, "{os}", osName)
-			r = strings.ReplaceAll(r, "{arch}", archName)
-
-			if _, dup := seen[r]; !dup {
-				seen[r] = struct{}{}
-
-				results = append(results, r)
-			}
+// resolveOS returns the OS name to use. If osMap contains a mapping for
+// p.OS, the mapped value is returned; otherwise p.OS is used directly.
+func resolveOS(p Platform, osMap map[string]string) string {
+	if osMap != nil {
+		if v, ok := osMap[p.OS]; ok {
+			return v
 		}
 	}
 
-	return results
+	return p.OS
+}
+
+// resolveArch returns the arch name to use. If archMap contains a mapping for
+// p.Arch, the mapped value is returned; otherwise p.Arch is used directly.
+func resolveArch(p Platform, archMap map[string]string) string {
+	if archMap != nil {
+		if v, ok := archMap[p.Arch]; ok {
+			return v
+		}
+	}
+
+	return p.Arch
+}
+
+// Resolve expands an asset pattern into a single concrete asset name
+// by substituting {version}, {os}, and {arch} placeholders.
+//
+// The version string has a leading "v" stripped before substitution.
+// osMap and archMap allow per-tool overrides of the default GOOS/GOARCH values.
+func Resolve(asset, version, prefix string, p Platform, osMap, archMap map[string]string) string {
+	ver := strings.TrimPrefix(version, prefix)
+	r := strings.ReplaceAll(asset, "{version}", ver)
+	r = strings.ReplaceAll(r, "{os}", resolveOS(p, osMap))
+	r = strings.ReplaceAll(r, "{arch}", resolveArch(p, archMap))
+
+	return r
 }
