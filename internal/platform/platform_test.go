@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestResolve(t *testing.T) {
+func TestResolve(t *testing.T) { //nolint:funlen // table-driven test
 	t.Parallel()
 
 	tests := []struct {
