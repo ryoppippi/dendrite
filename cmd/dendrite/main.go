@@ -143,7 +143,6 @@ func runLock(args []string) error {
 	fs := flag.NewFlagSet("lock", flag.ContinueOnError)
 
 	configFile := fs.String("f", "dendrite.yaml", "path to config file")
-	platformsFlag := fs.String("p", "darwin/arm64,linux/amd64", "target platforms (comma-separated os/arch)")
 
 	if err := fs.Parse(args); err != nil {
 		return fmt.Errorf("failed to parse flags: %w", err)
@@ -154,27 +153,21 @@ func runLock(args []string) error {
 		return fmt.Errorf("failed to parse config: %w", err)
 	}
 
-	platformStrs := strings.Split(*platformsFlag, ",")
+	platformStrs := cfg.Platforms()
+
+	if len(platformStrs) == 0 {
+		return fmt.Errorf("no target platforms found in config asset keys")
+	}
 
 	var platforms []platform.Platform
 
 	for _, s := range platformStrs {
-		s = strings.TrimSpace(s)
-
-		if s == "" {
-			continue
-		}
-
 		p, parseErr := parsePlatform(s)
 		if parseErr != nil {
 			return fmt.Errorf("failed to parse platform %q: %w", s, parseErr)
 		}
 
 		platforms = append(platforms, p)
-	}
-
-	if len(platforms) == 0 {
-		return fmt.Errorf("no target platforms specified")
 	}
 
 	lockPath := lockFilePath(*configFile)
@@ -270,15 +263,17 @@ func executeLock(cfg *config.Config, lockPath string, platforms []platform.Platf
 // resolveCandidates returns the candidate URL for a tool on a given platform.
 func resolveCandidates(tool *config.Tool, p platform.Platform) []string {
 	if tool.URL != "" {
-		return []string{platform.Resolve(tool.URL, tool.Version, tool.VersionPrefix, p, tool.OSMap, tool.ArchMap)}
+		return []string{platform.Resolve(tool.URL, tool.Version, tool.VersionPrefix)}
 	}
 
-	assetPattern, ok := tool.Asset[p.OS]
+	platformKey := p.OS + "/" + p.Arch
+
+	assetPattern, ok := tool.Asset[platformKey]
 	if !ok {
 		return nil
 	}
 
-	assetName := platform.Resolve(assetPattern, tool.Version, tool.VersionPrefix, p, tool.OSMap, tool.ArchMap)
+	assetName := platform.Resolve(assetPattern, tool.Version, tool.VersionPrefix)
 
 	return []string{buildGitHubReleaseURL(tool.Owner, tool.Repo, tool.Version, assetName)}
 }

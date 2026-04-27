@@ -22,8 +22,8 @@ func TestParseBytes(t *testing.T) { //nolint:funlen,gocognit,cyclop // table-dri
 tools:
   - name: cli/cli@v2.87.0
     asset:
-      darwin: gh_{version}_{os}_{arch}.tar.gz
-      linux: gh_{version}_{os}_{arch}.tar.gz
+      darwin/arm64: gh_{version}_macOS_arm64.tar.gz
+      linux/amd64: gh_{version}_linux_amd64.tar.gz
     bins:
       - gh
 `,
@@ -36,8 +36,8 @@ tools:
 				assertEqual(t, "Owner", "cli", tool.Owner)
 				assertEqual(t, "Repo", "cli", tool.Repo)
 				assertEqual(t, "Version", "v2.87.0", tool.Version)
-				assertEqual(t, "Asset[darwin]", "gh_{version}_{os}_{arch}.tar.gz", tool.Asset["darwin"])
-				assertEqual(t, "Asset[linux]", "gh_{version}_{os}_{arch}.tar.gz", tool.Asset["linux"])
+				assertEqual(t, "Asset[darwin/arm64]", "gh_{version}_macOS_arm64.tar.gz", tool.Asset["darwin/arm64"])
+				assertEqual(t, "Asset[linux/amd64]", "gh_{version}_linux_amd64.tar.gz", tool.Asset["linux/amd64"])
 				assertSliceEqual(t, "Bins", []string{"gh"}, tool.Bins)
 			},
 		},
@@ -47,8 +47,8 @@ tools:
 tools:
   - name: aquaproj/aqua@v2.39.0
     asset:
-      darwin: aqua_{os}_{arch}.tar.gz
-      linux: aqua_{os}_{arch}.tar.gz
+      darwin/arm64: aqua_darwin_arm64.tar.gz
+      linux/amd64: aqua_linux_amd64.tar.gz
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
@@ -68,20 +68,20 @@ tools:
 tools:
   - name: cli/cli@v2.87.0
     asset:
-      darwin: gh_{version}_{os}_{arch}.tar.gz
-      linux: gh_{version}_{os}_{arch}.tar.gz
+      darwin/arm64: gh_{version}_macOS_arm64.tar.gz
+      linux/amd64: gh_{version}_linux_amd64.tar.gz
     bins:
       - gh
   - name: BurntSushi/ripgrep@14.1.0
     asset:
-      darwin: ripgrep-{version}-{arch}-{os}.tar.gz
-      linux: ripgrep-{version}-{arch}-{os}.tar.gz
+      darwin/arm64: ripgrep-{version}-aarch64-apple-darwin.tar.gz
+      linux/amd64: ripgrep-{version}-x86_64-unknown-linux-musl.tar.gz
     bins:
       - rg
   - name: aquaproj/aqua@v2.39.0
     asset:
-      darwin: aqua_{os}_{arch}.tar.gz
-      linux: aqua_{os}_{arch}.tar.gz
+      darwin/arm64: aqua_darwin_arm64.tar.gz
+      linux/amd64: aqua_linux_amd64.tar.gz
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
@@ -103,8 +103,8 @@ tools:
 tools:
   - name: cli/cli@v2.87.0
     asset:
-      darwin: gh_{version}_{os}_{arch}.tar.gz
-      linux: gh_{version}_{os}_{arch}.tar.gz
+      darwin/arm64: gh_{version}_macOS_arm64.tar.gz
+      linux/amd64: gh_{version}_linux_amd64.tar.gz
     bins:
       - gh
       - gh-auth
@@ -127,8 +127,8 @@ tools:
 tools:
   - name: BurntSushi/ripgrep@14.1.0
     asset:
-      darwin: ripgrep-{version}-{arch}-{os}.tar.gz
-      linux: ripgrep-{version}-{arch}-{os}.tar.gz
+      darwin/arm64: ripgrep-{version}-aarch64-apple-darwin.tar.gz
+      linux/amd64: ripgrep-{version}-x86_64-unknown-linux-musl.tar.gz
     bins:
       - rg
 `,
@@ -157,7 +157,7 @@ tools: []
 			input: `
 tools:
   - asset:
-      darwin: foo_{os}.tar.gz
+      darwin/arm64: foo.tar.gz
 `,
 			wantErr:   true,
 			errSubstr: "name is required",
@@ -168,7 +168,7 @@ tools:
 tools:
   - name: cli/cli
     asset:
-      darwin: gh_{os}.tar.gz
+      darwin/arm64: gh.tar.gz
 `,
 			wantErr:   true,
 			errSubstr: "must match owner/repo@version pattern",
@@ -179,7 +179,7 @@ tools:
 tools:
   - name: cli@v1.0.0
     asset:
-      darwin: gh_{os}.tar.gz
+      darwin/arm64: gh.tar.gz
 `,
 			wantErr:   true,
 			errSubstr: "must match owner/repo@version pattern",
@@ -190,27 +190,27 @@ tools:
 tools:
   - name: ""
     asset:
-      darwin: gh_{os}.tar.gz
+      darwin/arm64: gh.tar.gz
 `,
 			wantErr:   true,
 			errSubstr: "name is required",
 		},
 		{
-			name: "asset with per-os patterns",
+			name: "asset with per-platform patterns",
 			input: `
 tools:
   - name: cli/cli@v2.87.0
     asset:
-      darwin: gh_{version}_{os}_{arch}.zip
-      linux: gh_{version}_{os}_{arch}.tar.gz
+      darwin/arm64: gh_{version}_macOS_arm64.zip
+      linux/amd64: gh_{version}_linux_amd64.tar.gz
     bins:
       - gh
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
 				tool := cfg.Tools[0]
-				assertEqual(t, "Asset[darwin]", "gh_{version}_{os}_{arch}.zip", tool.Asset["darwin"])
-				assertEqual(t, "Asset[linux]", "gh_{version}_{os}_{arch}.tar.gz", tool.Asset["linux"])
+				assertEqual(t, "Asset[darwin/arm64]", "gh_{version}_macOS_arm64.zip", tool.Asset["darwin/arm64"])
+				assertEqual(t, "Asset[linux/amd64]", "gh_{version}_linux_amd64.tar.gz", tool.Asset["linux/amd64"])
 			},
 		},
 		{
@@ -248,7 +248,7 @@ tools:
 tools:
   - name: bad-name
     asset:
-      darwin: foo.tar.gz
+      darwin/arm64: foo.tar.gz
   - name: cli/cli@v1.0.0
 `,
 			wantErr:   true,
@@ -266,8 +266,8 @@ tools:
 tools:
   - name: hashicorp/terraform@v1.9.0
     asset:
-      darwin: terraform_{version}_{os}_{arch}.zip
-      linux: terraform_{version}_{os}_{arch}.zip
+      darwin/arm64: terraform_{version}_darwin_arm64.zip
+      linux/amd64: terraform_{version}_linux_amd64.zip
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
@@ -309,7 +309,7 @@ tools:
 tools:
   - name: cli/cli@v2.87.0
     asset:
-      darwin: gh_{version}_{os}_{arch}.tar.gz
+      darwin/arm64: gh_{version}_macOS_arm64.tar.gz
     url: https://example.com/gh.tar.gz
 `,
 			wantErr:   true,
@@ -321,7 +321,7 @@ tools:
 tools:
   - name: golang/go@go1.26.0
     asset:
-      darwin: go{version}.darwin-arm64.tar.gz
+      darwin/arm64: go{version}.darwin-arm64.tar.gz
     version_prefix: "go"
     bins:
       - go
@@ -339,8 +339,8 @@ tools:
 tools:
   - name: BurntSushi/ripgrep@14.1.0
     asset:
-      darwin: ripgrep-{version}-{arch}-{os}.tar.gz
-      linux: ripgrep-{version}-{arch}-{os}.tar.gz
+      darwin/arm64: ripgrep-{version}-aarch64-apple-darwin.tar.gz
+      linux/amd64: ripgrep-{version}-x86_64-unknown-linux-musl.tar.gz
     version_prefix: ""
     bins:
       - rg
@@ -353,49 +353,26 @@ tools:
 			},
 		},
 		{
-			name: "os_map and arch_map",
-			input: `
-tools:
-  - name: masaushi/accessory@v0.4.0
-    asset:
-      darwin: accessory_{os}_{arch}.tar.gz
-      linux: accessory_{os}_{arch}.tar.gz
-    os_map:
-      darwin: Darwin
-    arch_map:
-      amd64: x86_64
-`,
-			check: func(t *testing.T, cfg *Config) {
-				t.Helper()
-				tool := cfg.Tools[0]
-				if len(tool.OSMap) != 1 {
-					t.Fatalf("expected 1 os_map entry, got %d", len(tool.OSMap))
-				}
-				assertEqual(t, "OSMap[darwin]", "Darwin", tool.OSMap["darwin"])
-				if len(tool.ArchMap) != 1 {
-					t.Fatalf("expected 1 arch_map entry, got %d", len(tool.ArchMap))
-				}
-				assertEqual(t, "ArchMap[amd64]", "x86_64", tool.ArchMap["amd64"])
-			},
-		},
-		{
-			name: "no os_map or arch_map defaults to nil",
+			name: "invalid asset key - os only without arch",
 			input: `
 tools:
   - name: cli/cli@v2.87.0
     asset:
-      darwin: gh_{version}_{os}_{arch}.tar.gz
+      darwin: gh_{version}.tar.gz
 `,
-			check: func(t *testing.T, cfg *Config) {
-				t.Helper()
-				tool := cfg.Tools[0]
-				if tool.OSMap != nil {
-					t.Errorf("expected OSMap to be nil, got %v", tool.OSMap)
-				}
-				if tool.ArchMap != nil {
-					t.Errorf("expected ArchMap to be nil, got %v", tool.ArchMap)
-				}
-			},
+			wantErr:   true,
+			errSubstr: "invalid asset key",
+		},
+		{
+			name: "invalid asset key - uppercase",
+			input: `
+tools:
+  - name: cli/cli@v2.87.0
+    asset:
+      Darwin/arm64: gh_{version}.tar.gz
+`,
+			wantErr:   true,
+			errSubstr: "invalid asset key",
 		},
 	}
 
@@ -440,8 +417,8 @@ func TestParse(t *testing.T) { //nolint:funlen // comprehensive file-based test
 tools:
   - name: cli/cli@v2.87.0
     asset:
-      darwin: gh_{version}_{os}_{arch}.tar.gz
-      linux: gh_{version}_{os}_{arch}.tar.gz
+      darwin/arm64: gh_{version}_macOS_arm64.tar.gz
+      linux/amd64: gh_{version}_linux_amd64.tar.gz
     bins:
       - gh
 `
@@ -500,7 +477,7 @@ tools:
 tools:
   - name: badformat
     asset:
-      darwin: foo.tar.gz
+      darwin/arm64: foo.tar.gz
 `
 
 		if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
@@ -516,6 +493,47 @@ tools:
 			t.Errorf("error %q does not mention pattern mismatch", err.Error())
 		}
 	})
+}
+
+func TestPlatforms(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		Tools: []Tool{
+			{
+				Asset: map[string]string{
+					"darwin/arm64": "tool_darwin_arm64.tar.gz",
+					"linux/amd64":  "tool_linux_amd64.tar.gz",
+				},
+			},
+			{
+				Asset: map[string]string{
+					"darwin/arm64": "other_darwin_arm64.tar.gz",
+					"darwin/amd64": "other_darwin_amd64.tar.gz",
+				},
+			},
+		},
+	}
+
+	got := cfg.Platforms()
+	want := []string{"darwin/amd64", "darwin/arm64", "linux/amd64"}
+
+	assertSliceEqual(t, "Platforms", want, got)
+}
+
+func TestPlatforms_empty(t *testing.T) {
+	t.Parallel()
+
+	cfg := &Config{
+		Tools: []Tool{
+			{URL: "https://example.com/tool.tar.gz"},
+		},
+	}
+
+	got := cfg.Platforms()
+	if len(got) != 0 {
+		t.Errorf("expected empty platforms, got %v", got)
+	}
 }
 
 func TestNamePattern(t *testing.T) {

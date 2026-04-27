@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"regexp"
+	"sort"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -14,9 +15,33 @@ import (
 // namePattern matches the required "owner/repo@version" format.
 var namePattern = regexp.MustCompile(`^([^/]+)/([^@]+)@(.+)$`)
 
+// platformKeyPattern matches the required "os/arch" format for asset keys.
+var platformKeyPattern = regexp.MustCompile(`^[a-z]+/[a-z0-9_]+$`)
+
 // Config represents the top-level dendrite configuration.
 type Config struct {
 	Tools []Tool `yaml:"tools"`
+}
+
+// Platforms returns a deduplicated, sorted list of platform keys (e.g. "darwin/arm64")
+// derived from the union of all tools' asset map keys.
+func (c *Config) Platforms() []string {
+	seen := make(map[string]struct{})
+
+	for i := range c.Tools {
+		for key := range c.Tools[i].Asset {
+			seen[key] = struct{}{}
+		}
+	}
+
+	platforms := make([]string, 0, len(seen))
+	for key := range seen {
+		platforms = append(platforms, key)
+	}
+
+	sort.Strings(platforms)
+
+	return platforms
 }
 
 // Tool represents a single tool entry parsed from the configuration.
@@ -27,9 +52,8 @@ type Tool struct {
 	Repo string `yaml:"-"`
 	// Version is the version string including any prefix (e.g. "v2.87.0").
 	Version string `yaml:"-"`
-	// Asset maps OS names to asset filename patterns with placeholders like {version}, {os}, {arch}.
-	// Each key is a GOOS value (e.g. "darwin", "linux") and the value is the asset pattern for that OS.
-	// Mutually exclusive with URL.
+	// Asset maps platform keys (e.g. "darwin/arm64", "linux/amd64") to asset filename
+	// patterns with the {version} placeholder. Mutually exclusive with URL.
 	Asset map[string]string `yaml:"asset"`
 	// URL is a direct download URL pattern with placeholders.
 	// Use this for non-GitHub sources. Mutually exclusive with Asset.
@@ -39,10 +63,6 @@ type Tool struct {
 	// VersionPrefix is the prefix to strip from version when expanding {version}.
 	// Defaults to "v". Set to "" to keep version as-is, or "go" for golang/go, etc.
 	VersionPrefix string `yaml:"version_prefix"`
-	// OSMap maps GOOS values to the tool's OS naming. e.g., {"darwin": "Darwin"}
-	OSMap map[string]string `yaml:"os_map"`
-	// ArchMap maps GOARCH values to the tool's arch naming. e.g., {"amd64": "x86_64"}
-	ArchMap map[string]string `yaml:"arch_map"`
 	// BinMap maps desired bin name to the actual filename inside the archive.
 	// e.g., {"ls-lint": "ls-lint-darwin-arm64"}.
 	BinMap map[string]string `yaml:"bin_map"`
@@ -66,8 +86,6 @@ type rawTool struct {
 	URL             string            `yaml:"url"`
 	Bins            []string          `yaml:"bins"`
 	VersionPrefix   *string           `yaml:"version_prefix"`
-	OSMap           map[string]string `yaml:"os_map"`
-	ArchMap         map[string]string `yaml:"arch_map"`
 	BinMap          map[string]string `yaml:"bin_map"`
 	Format          string            `yaml:"format"`
 	StripComponents int               `yaml:"strip_components"`
@@ -84,8 +102,6 @@ func (t *Tool) UnmarshalYAML(value *yaml.Node) error {
 	t.Asset = raw.Asset
 	t.URL = raw.URL
 	t.Bins = raw.Bins
-	t.OSMap = raw.OSMap
-	t.ArchMap = raw.ArchMap
 	t.BinMap = raw.BinMap
 	t.Format = raw.Format
 	t.StripComponents = raw.StripComponents
@@ -154,6 +170,13 @@ func validateTool(t *Tool, index int) error {
 
 	if hasAsset && hasURL {
 		errs = append(errs, fmt.Errorf("tools[%d]: asset and url are mutually exclusive", index))
+	}
+
+	// Validate that asset keys match the "os/arch" pattern.
+	for key := range t.Asset {
+		if !platformKeyPattern.MatchString(key) {
+			errs = append(errs, fmt.Errorf("tools[%d]: invalid asset key %q: must match os/arch pattern (e.g. darwin/arm64)", index, key))
+		}
 	}
 
 	// Default version_prefix to "v" if not explicitly set.

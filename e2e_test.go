@@ -112,14 +112,14 @@ func TestE2E_FullPipeline(t *testing.T) { //nolint:funlen // e2e test with compr
 	configContent := `tools:
   - name: cli/cli@v2.87.0
     asset:
-      darwin: gh_{version}_{os}_{arch}.tar.gz
-      linux: gh_{version}_{os}_{arch}.tar.gz
+      darwin/arm64: gh_{version}_macOS_arm64.tar.gz
+      linux/amd64: gh_{version}_linux_amd64.tar.gz
     bins:
       - gh
   - name: BurntSushi/ripgrep@14.1.0
     asset:
-      darwin: ripgrep-{version}-{arch}-{os}.tar.gz
-      linux: ripgrep-{version}-{arch}-{os}.tar.gz
+      darwin/arm64: ripgrep-{version}-aarch64-apple-darwin.tar.gz
+      linux/amd64: ripgrep-{version}-x86_64-unknown-linux-musl.tar.gz
     bins:
       - rg
 `
@@ -234,13 +234,13 @@ func TestE2E_MultipleToolConfigurations(t *testing.T) { //nolint:funlen // e2e t
 			configYAML: `tools:
   - name: cli/cli@v2.87.0
     asset:
-      darwin: gh_{version}_{os}_{arch}.tar.gz
-      linux: gh_{version}_{os}_{arch}.tar.gz
+      darwin/arm64: gh_{version}_macOS_arm64.tar.gz
+      linux/amd64: gh_{version}_linux_amd64.tar.gz
     bins:
       - gh
 `,
 			lockToolName:    "cli/cli@v2.87.0",
-			lockURL:         "https://github.com/cli/cli/releases/download/v2.87.0/gh_2.87.0_darwin_arm64.tar.gz",
+			lockURL:         "https://github.com/cli/cli/releases/download/v2.87.0/gh_2.87.0_macOS_arm64.tar.gz",
 			lockSHA256:      "sha256-explicithash=",
 			expectedPname:   "cli",
 			expectedVersion: "2.87.0",
@@ -252,8 +252,8 @@ func TestE2E_MultipleToolConfigurations(t *testing.T) { //nolint:funlen // e2e t
 			configYAML: `tools:
   - name: aquaproj/aqua@v2.39.0
     asset:
-      darwin: aqua_{os}_{arch}.tar.gz
-      linux: aqua_{os}_{arch}.tar.gz
+      darwin/arm64: aqua_darwin_arm64.tar.gz
+      linux/amd64: aqua_linux_amd64.tar.gz
 `,
 			lockToolName:    "aquaproj/aqua@v2.39.0",
 			lockURL:         "https://github.com/aquaproj/aqua/releases/download/v2.39.0/aqua_darwin_arm64.tar.gz",
@@ -268,8 +268,8 @@ func TestE2E_MultipleToolConfigurations(t *testing.T) { //nolint:funlen // e2e t
 			configYAML: `tools:
   - name: sharkdp/bat@v0.24.0
     asset:
-      darwin: bat-v{version}-{arch}-{os}.tar.gz
-      linux: bat-v{version}-{arch}-{os}.tar.gz
+      darwin/arm64: bat-v{version}-arm64-darwin.tar.gz
+      linux/amd64: bat-v{version}-x86_64-linux.tar.gz
     bins:
       - bat
 `,
@@ -286,13 +286,13 @@ func TestE2E_MultipleToolConfigurations(t *testing.T) { //nolint:funlen // e2e t
 			configYAML: `tools:
   - name: BurntSushi/ripgrep@14.1.0
     asset:
-      darwin: ripgrep-{version}-{arch}-{os}.tar.gz
-      linux: ripgrep-{version}-{arch}-{os}.tar.gz
+      darwin/arm64: ripgrep-{version}-aarch64-apple-darwin.tar.gz
+      linux/amd64: ripgrep-{version}-x86_64-unknown-linux-musl.tar.gz
     bins:
       - rg
 `,
 			lockToolName:    "BurntSushi/ripgrep@14.1.0",
-			lockURL:         "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-arm64-darwin.tar.gz",
+			lockURL:         "https://github.com/BurntSushi/ripgrep/releases/download/14.1.0/ripgrep-14.1.0-aarch64-apple-darwin.tar.gz",
 			lockSHA256:      "sha256-novprefixhash=",
 			expectedPname:   "ripgrep",
 			expectedVersion: "14.1.0",
@@ -477,8 +477,8 @@ func TestE2E_ErrorCases(t *testing.T) { //nolint:funlen // e2e error case test
 		configContent := `tools:
   - name: cli/cli@v2.87.0
     asset:
-      darwin: gh_{version}_{os}_{arch}.tar.gz
-      linux: gh_{version}_{os}_{arch}.tar.gz
+      darwin/arm64: gh_{version}_macOS_arm64.tar.gz
+      linux/amd64: gh_{version}_linux_amd64.tar.gz
     bins:
       - gh
 `
@@ -514,14 +514,14 @@ func TestE2E_ErrorCases(t *testing.T) { //nolint:funlen // e2e error case test
 		configContent := `tools:
   - name: cli/cli@v2.87.0
     asset:
-      darwin: gh_{version}_{os}_{arch}.tar.gz
-      linux: gh_{version}_{os}_{arch}.tar.gz
+      darwin/arm64: gh_{version}_macOS_arm64.tar.gz
+      linux/amd64: gh_{version}_linux_amd64.tar.gz
     bins:
       - gh
   - name: BurntSushi/ripgrep@14.1.0
     asset:
-      darwin: ripgrep-{version}-{arch}-{os}.tar.gz
-      linux: ripgrep-{version}-{arch}-{os}.tar.gz
+      darwin/arm64: ripgrep-{version}-aarch64-apple-darwin.tar.gz
+      linux/amd64: ripgrep-{version}-x86_64-unknown-linux-musl.tar.gz
     bins:
       - rg
 `
