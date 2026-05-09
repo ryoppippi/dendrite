@@ -1,5 +1,6 @@
 bin/
 /dendrite
+/result
 coverage.out
 coverage.html
 dist/

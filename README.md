@@ -10,6 +10,18 @@ dendrite lets you manage CLI tool installations via Nix without writing Nix code
 go install github.com/sivchari/dendrite/cmd/dendrite@latest
 ```
 
+Or run it directly with Nix:
+
+```bash
+nix run github:sivchari/dendrite -- generate -f dendrite.yaml -o packages/
+```
+
+For local development from this repository:
+
+```bash
+nix run . -- generate -f dendrite.yaml -o packages/
+```
+
 ## Usage
 
 ### 1. Define tools in `dendrite.yaml`
