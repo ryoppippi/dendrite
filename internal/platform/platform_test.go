@@ -78,6 +78,91 @@ func TestResolve(t *testing.T) { //nolint:funlen // table-driven test
 	}
 }
 
+func TestResolveCandidates(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name     string
+		pattern  string
+		version  string
+		prefix   string
+		platform Platform
+		first    string
+		contains []string
+	}{
+		{
+			name:     "darwin arm64 aliases",
+			pattern:  "gh_{version}_{os}_{arch}.zip",
+			version:  "v2.87.0",
+			prefix:   "v",
+			platform: DarwinARM64,
+			first:    "gh_2.87.0_darwin_arm64.zip",
+			contains: []string{
+				"gh_2.87.0_darwin_arm64.tar.gz",
+				"gh_2.87.0_macOS_arm64.zip",
+				"gh_2.87.0_Darwin_aarch64.zip",
+			},
+		},
+		{
+			name:     "linux amd64 aliases",
+			pattern:  "ripgrep-{version}-{arch}-{os}.tar.gz",
+			version:  "14.1.0",
+			prefix:   "v",
+			platform: LinuxAMD64,
+			first:    "ripgrep-14.1.0-amd64-linux.tar.gz",
+			contains: []string{
+				"ripgrep-14.1.0-amd64-linux.zip",
+				"ripgrep-14.1.0-x86_64-linux.tar.gz",
+				"ripgrep-14.1.0-x86_64-unknown-linux-musl.tar.gz",
+			},
+		},
+		{
+			name:     "literal pattern has no archive fallback",
+			pattern:  "tool-{version}.zip",
+			version:  "v1.0.0",
+			prefix:   "v",
+			platform: LinuxARM64,
+			first:    "tool-1.0.0.zip",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			got := ResolveCandidates(tt.pattern, tt.version, tt.prefix, tt.platform)
+
+			if len(got) == 0 {
+				t.Fatal("ResolveCandidates() returned no candidates")
+			}
+
+			if got[0] != tt.first {
+				t.Errorf("ResolveCandidates()[0] = %q, want %q", got[0], tt.first)
+			}
+
+			if len(tt.contains) == 0 && len(got) != 1 {
+				t.Fatalf("ResolveCandidates() length = %d, want 1\ngot: %#v", len(got), got)
+			}
+
+			for _, want := range tt.contains {
+				if !stringSliceContains(got, want) {
+					t.Errorf("ResolveCandidates() does not contain %q\ngot: %#v", want, got)
+				}
+			}
+		})
+	}
+}
+
+func stringSliceContains(values []string, want string) bool {
+	for _, value := range values {
+		if value == want {
+			return true
+		}
+	}
+
+	return false
+}
+
 func TestNixSystem(t *testing.T) {
 	t.Parallel()
 

@@ -214,6 +214,25 @@ tools:
 			},
 		},
 		{
+			name: "asset scalar expands to default platforms",
+			input: `
+tools:
+  - name: cli/cli@v2.87.0
+    asset: gh_{version}_{os}_{arch}.zip
+    bins:
+      - gh
+`,
+			check: func(t *testing.T, cfg *Config) {
+				t.Helper()
+				tool := cfg.Tools[0]
+				want := "gh_{version}_{os}_{arch}.zip"
+
+				assertEqual(t, "Asset[linux/amd64]", want, tool.Asset["linux/amd64"])
+				assertEqual(t, "Asset[linux/arm64]", want, tool.Asset["linux/arm64"])
+				assertEqual(t, "Asset[darwin/arm64]", want, tool.Asset["darwin/arm64"])
+			},
+		},
+		{
 			name: "missing asset and url",
 			input: `
 tools:
@@ -304,6 +323,26 @@ tools:
 				}
 				assertEqual(t, "VersionPrefix", "go", tool.VersionPrefix)
 				assertSliceEqual(t, "Bins", []string{"go", "gofmt"}, tool.Bins)
+			},
+		},
+		{
+			name: "url scalar expands to default platforms",
+			input: `
+tools:
+  - name: golang/go@go1.26.0
+    url: https://go.dev/dl/go{version}.{os}-{arch}.tar.gz
+    version_prefix: "go"
+    bins:
+      - go
+`,
+			check: func(t *testing.T, cfg *Config) {
+				t.Helper()
+				tool := cfg.Tools[0]
+				want := "https://go.dev/dl/go{version}.{os}-{arch}.tar.gz"
+
+				assertEqual(t, "URL[linux/amd64]", want, tool.URL["linux/amd64"])
+				assertEqual(t, "URL[linux/arm64]", want, tool.URL["linux/arm64"])
+				assertEqual(t, "URL[darwin/arm64]", want, tool.URL["darwin/arm64"])
 			},
 		},
 		{
@@ -521,6 +560,24 @@ func TestPlatforms(t *testing.T) {
 
 	got := cfg.Platforms()
 	want := []string{"darwin/amd64", "darwin/arm64", "linux/amd64"}
+
+	assertSliceEqual(t, "Platforms", want, got)
+}
+
+func TestPlatforms_scalarDefaults(t *testing.T) {
+	t.Parallel()
+
+	cfg, err := ParseBytes([]byte(`
+tools:
+  - name: cli/cli@v2.87.0
+    asset: gh_{version}_{os}_{arch}.zip
+`))
+	if err != nil {
+		t.Fatalf("ParseBytes failed: %v", err)
+	}
+
+	got := cfg.Platforms()
+	want := []string{"darwin/arm64", "linux/amd64", "linux/arm64"}
 
 	assertSliceEqual(t, "Platforms", want, got)
 }
