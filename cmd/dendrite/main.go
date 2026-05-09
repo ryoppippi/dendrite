@@ -219,6 +219,11 @@ func executeLock(cfg *config.Config, lockPath string, platforms []platform.Platf
 		for j := range platforms {
 			pKey := lock.PlatformKey(platforms[j])
 			platformStr := platforms[j].OS + "/" + platforms[j].Arch
+			candidates := resolveCandidates(&cfg.Tools[i], platforms[j])
+
+			if len(candidates) == 0 {
+				continue
+			}
 
 			// Check existing lock file for unchanged entries.
 			if existing != nil {
@@ -235,8 +240,6 @@ func executeLock(cfg *config.Config, lockPath string, platforms []platform.Platf
 			}
 
 			fmt.Fprintf(os.Stderr, "locking %s for %s...\n", name, platformStr)
-
-			candidates := resolveCandidates(&cfg.Tools[i], platforms[j])
 
 			var locked bool
 
@@ -278,7 +281,7 @@ func resolveCandidates(tool *config.Tool, p platform.Platform) []string {
 	platformKey := p.OS + "/" + p.Arch
 
 	if urlPattern, ok := tool.URL[platformKey]; ok {
-		return []string{platform.Resolve(urlPattern, tool.Version, tool.VersionPrefix)}
+		return platform.ResolveCandidates(urlPattern, tool.Version, tool.VersionPrefix, p)
 	}
 
 	assetPattern, ok := tool.Asset[platformKey]
@@ -286,7 +289,12 @@ func resolveCandidates(tool *config.Tool, p platform.Platform) []string {
 		return nil
 	}
 
-	assetName := platform.Resolve(assetPattern, tool.Version, tool.VersionPrefix)
+	assetNames := platform.ResolveCandidates(assetPattern, tool.Version, tool.VersionPrefix, p)
+	candidates := make([]string, 0, len(assetNames))
 
-	return []string{buildGitHubReleaseURL(tool.Owner, tool.Repo, tool.Version, assetName)}
+	for _, assetName := range assetNames {
+		candidates = append(candidates, buildGitHubReleaseURL(tool.Owner, tool.Repo, tool.Version, assetName))
+	}
+
+	return candidates
 }

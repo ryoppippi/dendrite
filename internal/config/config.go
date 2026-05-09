@@ -9,6 +9,8 @@ import (
 	"sort"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/sivchari/dendrite/internal/platform"
 )
 
 // namePattern matches the required "owner/repo@version" format.
@@ -85,8 +87,8 @@ type Tool struct {
 // rawTool is used for YAML unmarshalling before validation.
 type rawTool struct {
 	Name            string            `yaml:"name"`
-	Asset           map[string]string `yaml:"asset"`
-	URL             map[string]string `yaml:"url"`
+	Asset           yaml.Node         `yaml:"asset"`
+	URL             yaml.Node         `yaml:"url"`
 	Bins            []string          `yaml:"bins"`
 	VersionPrefix   *string           `yaml:"version_prefix"`
 	BinMap          map[string]string `yaml:"bin_map"`
@@ -101,9 +103,19 @@ func (t *Tool) UnmarshalYAML(value *yaml.Node) error {
 		return fmt.Errorf("failed to decode tool entry: %w", err)
 	}
 
+	asset, err := decodePatternMap(&raw.Asset, "asset")
+	if err != nil {
+		return err
+	}
+
+	url, err := decodePatternMap(&raw.URL, "url")
+	if err != nil {
+		return err
+	}
+
 	t.name = raw.Name
-	t.Asset = raw.Asset
-	t.URL = raw.URL
+	t.Asset = asset
+	t.URL = url
 	t.Bins = raw.Bins
 	t.BinMap = raw.BinMap
 	t.Format = raw.Format
@@ -115,6 +127,36 @@ func (t *Tool) UnmarshalYAML(value *yaml.Node) error {
 	}
 
 	return nil
+}
+
+func decodePatternMap(node *yaml.Node, field string) (map[string]string, error) {
+	if node == nil || node.Kind == 0 {
+		return nil, nil
+	}
+
+	switch node.Kind {
+	case yaml.ScalarNode:
+		var pattern string
+		if err := node.Decode(&pattern); err != nil {
+			return nil, fmt.Errorf("failed to decode %s pattern: %w", field, err)
+		}
+
+		patterns := make(map[string]string, len(platform.DefaultPlatforms))
+		for _, p := range platform.DefaultPlatforms {
+			patterns[p.OS+"/"+p.Arch] = pattern
+		}
+
+		return patterns, nil
+	case yaml.MappingNode:
+		var patterns map[string]string
+		if err := node.Decode(&patterns); err != nil {
+			return nil, fmt.Errorf("failed to decode %s map: %w", field, err)
+		}
+
+		return patterns, nil
+	default:
+		return nil, fmt.Errorf("%s must be a string pattern or platform map", field)
+	}
 }
 
 // Parse reads the YAML file at the given path and returns a validated Config.
