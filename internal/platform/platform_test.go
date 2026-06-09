@@ -78,6 +78,28 @@ func TestResolve(t *testing.T) { //nolint:funlen // table-driven test
 	}
 }
 
+func assertResolveCandidates(t *testing.T, got []string, first string, contains []string) {
+	t.Helper()
+
+	if len(got) == 0 {
+		t.Fatal("ResolveCandidates() returned no candidates")
+	}
+
+	if got[0] != first {
+		t.Errorf("ResolveCandidates()[0] = %q, want %q", got[0], first)
+	}
+
+	if len(contains) == 0 && len(got) != 1 {
+		t.Fatalf("ResolveCandidates() length = %d, want 1\ngot: %#v", len(got), got)
+	}
+
+	for _, want := range contains {
+		if !stringSliceContains(got, want) {
+			t.Errorf("ResolveCandidates() does not contain %q\ngot: %#v", want, got)
+		}
+	}
+}
+
 func TestResolveCandidates(t *testing.T) {
 	t.Parallel()
 
@@ -132,23 +154,7 @@ func TestResolveCandidates(t *testing.T) {
 
 			got := ResolveCandidates(tt.pattern, tt.version, tt.prefix, tt.platform)
 
-			if len(got) == 0 {
-				t.Fatal("ResolveCandidates() returned no candidates")
-			}
-
-			if got[0] != tt.first {
-				t.Errorf("ResolveCandidates()[0] = %q, want %q", got[0], tt.first)
-			}
-
-			if len(tt.contains) == 0 && len(got) != 1 {
-				t.Fatalf("ResolveCandidates() length = %d, want 1\ngot: %#v", len(got), got)
-			}
-
-			for _, want := range tt.contains {
-				if !stringSliceContains(got, want) {
-					t.Errorf("ResolveCandidates() does not contain %q\ngot: %#v", want, got)
-				}
-			}
+			assertResolveCandidates(t, got, tt.first, tt.contains)
 		})
 	}
 }

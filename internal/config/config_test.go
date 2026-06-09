@@ -29,9 +29,11 @@ tools:
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
+
 				if len(cfg.Tools) != 1 {
 					t.Fatalf("expected 1 tool, got %d", len(cfg.Tools))
 				}
+
 				tool := cfg.Tools[0]
 				assertEqual(t, "Owner", "cli", tool.Owner)
 				assertEqual(t, "Repo", "cli", tool.Repo)
@@ -52,9 +54,11 @@ tools:
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
+
 				if len(cfg.Tools) != 1 {
 					t.Fatalf("expected 1 tool, got %d", len(cfg.Tools))
 				}
+
 				tool := cfg.Tools[0]
 				assertEqual(t, "Owner", "aquaproj", tool.Owner)
 				assertEqual(t, "Repo", "aqua", tool.Repo)
@@ -85,9 +89,11 @@ tools:
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
+
 				if len(cfg.Tools) != 3 {
 					t.Fatalf("expected 3 tools, got %d", len(cfg.Tools))
 				}
+
 				assertEqual(t, "Tools[0].Owner", "cli", cfg.Tools[0].Owner)
 				assertSliceEqual(t, "Tools[0].Bins", []string{"gh"}, cfg.Tools[0].Bins)
 				assertEqual(t, "Tools[1].Owner", "BurntSushi", cfg.Tools[1].Owner)
@@ -112,9 +118,11 @@ tools:
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
+
 				if len(cfg.Tools) != 1 {
 					t.Fatalf("expected 1 tool, got %d", len(cfg.Tools))
 				}
+
 				tool := cfg.Tools[0]
 				assertEqual(t, "Owner", "cli", tool.Owner)
 				assertEqual(t, "Repo", "cli", tool.Repo)
@@ -134,6 +142,7 @@ tools:
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
+
 				tool := cfg.Tools[0]
 				assertEqual(t, "Version", "14.1.0", tool.Version)
 			},
@@ -208,6 +217,7 @@ tools:
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
+
 				tool := cfg.Tools[0]
 				assertEqual(t, "Asset[darwin/arm64]", "gh_{version}_macOS_arm64.zip", tool.Asset["darwin/arm64"])
 				assertEqual(t, "Asset[linux/amd64]", "gh_{version}_linux_amd64.tar.gz", tool.Asset["linux/amd64"])
@@ -224,6 +234,7 @@ tools:
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
+
 				tool := cfg.Tools[0]
 				want := "gh_{version}_{os}_{arch}.zip"
 
@@ -290,6 +301,7 @@ tools:
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
+
 				tool := cfg.Tools[0]
 				assertEqual(t, "Owner", "hashicorp", tool.Owner)
 				assertEqual(t, "Repo", "terraform", tool.Repo)
@@ -312,15 +324,18 @@ tools:
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
+
 				tool := cfg.Tools[0]
 				assertEqual(t, "Owner", "golang", tool.Owner)
 				assertEqual(t, "Repo", "go", tool.Repo)
 				assertEqual(t, "Version", "go1.26.0", tool.Version)
 				assertEqual(t, "URL[darwin/arm64]", "https://go.dev/dl/go{version}.darwin-arm64.tar.gz", tool.URL["darwin/arm64"])
 				assertEqual(t, "URL[linux/amd64]", "https://go.dev/dl/go{version}.linux-amd64.tar.gz", tool.URL["linux/amd64"])
+
 				if len(tool.Asset) != 0 {
 					t.Errorf("expected empty Asset map, got %v", tool.Asset)
 				}
+
 				assertEqual(t, "VersionPrefix", "go", tool.VersionPrefix)
 				assertSliceEqual(t, "Bins", []string{"go", "gofmt"}, tool.Bins)
 			},
@@ -337,6 +352,7 @@ tools:
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
+
 				tool := cfg.Tools[0]
 				want := "https://go.dev/dl/go{version}.{os}-{arch}.tar.gz"
 
@@ -371,6 +387,7 @@ tools:
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
+
 				tool := cfg.Tools[0]
 				assertEqual(t, "VersionPrefix", "go", tool.VersionPrefix)
 				assertEqual(t, "Version", "go1.26.0", tool.Version)
@@ -390,6 +407,7 @@ tools:
 `,
 			check: func(t *testing.T, cfg *Config) {
 				t.Helper()
+
 				tool := cfg.Tools[0]
 				assertEqual(t, "VersionPrefix", "", tool.VersionPrefix)
 				assertEqual(t, "Version", "14.1.0", tool.Version)
