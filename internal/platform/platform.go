@@ -79,6 +79,7 @@ func appendUniqueCandidates(candidates []string, seen map[string]struct{}, value
 		}
 
 		seen[value] = struct{}{}
+
 		candidates = append(candidates, value)
 	}
 

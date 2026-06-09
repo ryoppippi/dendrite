@@ -131,7 +131,7 @@ func (t *Tool) UnmarshalYAML(value *yaml.Node) error {
 
 func decodePatternMap(node *yaml.Node, field string) (map[string]string, error) {
 	if node == nil || node.Kind == 0 {
-		return nil, nil
+		return map[string]string{}, nil
 	}
 
 	switch node.Kind {
@@ -154,9 +154,11 @@ func decodePatternMap(node *yaml.Node, field string) (map[string]string, error) 
 		}
 
 		return patterns, nil
-	default:
+	case yaml.DocumentNode, yaml.SequenceNode, yaml.AliasNode:
 		return nil, fmt.Errorf("%s must be a string pattern or platform map", field)
 	}
+
+	return nil, fmt.Errorf("%s must be a string pattern or platform map", field)
 }
 
 // Parse reads the YAML file at the given path and returns a validated Config.
