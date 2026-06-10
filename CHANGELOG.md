@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.5.1](https://github.com/ryoppippi/dendrite/compare/v0.5.0...v0.5.1) - 2026-06-10
+- [pull] main from sivchari:main by @pull[bot] in https://github.com/ryoppippi/dendrite/pull/1
+- [pull] main from sivchari:main by @pull[bot] in https://github.com/ryoppippi/dendrite/pull/2
+
 ## [v0.5.0](https://github.com/sivchari/dendrite/compare/v0.4.0...v0.5.0) - 2026-05-07
 - fix: extract only specified bins from tar/zip archives by @sivchari in https://github.com/sivchari/dendrite/pull/24
 - release v0.5.0 by @sivchari in https://github.com/sivchari/dendrite/pull/26
